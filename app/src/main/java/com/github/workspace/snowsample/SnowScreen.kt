@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,6 +19,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
+import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.isActive
 import kotlin.random.Random
 
 data class SnowState(
@@ -37,6 +40,10 @@ class Snow(
 
     fun draw(canvas: Canvas) {
         canvas.drawCircle(position, size, paint)
+    }
+
+    fun update() {
+        position = position.copy(y = position.y + 1)
     }
 }
 
@@ -64,6 +71,15 @@ fun SnowScreen() {
                 )
             )
         )
+    }
+
+    LaunchedEffect(Unit) {
+        while(isActive) {
+            awaitFrame()
+            for (snow in snowState.snows) {
+                snow.update()
+            }
+        }
     }
 
     Canvas(
