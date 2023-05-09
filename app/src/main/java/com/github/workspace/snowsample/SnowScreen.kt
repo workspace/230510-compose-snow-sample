@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.isActive
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
@@ -31,8 +32,9 @@ data class SnowState(
 
 class Snow(
     val size: Float,
+    val screenSize: IntSize,
     position: Offset,
-    val screenSize: IntSize
+    angle: Float
 ) {
     val paint: Paint = Paint().apply {
         isAntiAlias = true
@@ -40,6 +42,7 @@ class Snow(
         style = PaintingStyle.Fill
     }
     private var position by mutableStateOf(position)
+    private var angle by mutableStateOf(angle)
 
     fun draw(canvas: Canvas) {
         canvas.drawCircle(position, size, paint)
@@ -47,9 +50,9 @@ class Snow(
 
     fun update() {
         val increment = incrementRange.random()
-        val angle = angleSeedRange.random()
         val xAngle = increment * cos(angle)
         val yAngle = increment * sin(angle)
+        angle += angleSeedRange.random() / 1000F
         position = if (position.y > screenSize.height) {
             position.copy(y = 0F)
         } else {
@@ -64,19 +67,21 @@ private val incrementRange = 0.4F..0.8F
 
 
 fun createSnowList(canvas: IntSize): List<Snow> {
-    return List(10) {
+    return List(300) {
         Snow(
             size = 20F,
+            canvas,
             position = Offset(
-                x = canvas.width.randomTest().toFloat(),
-                y = canvas.height.randomTest().toFloat()
+                x = canvas.width.random().toFloat(),
+                y = canvas.height.random().toFloat()
             ),
-            canvas
+            angle = angleSeed.random() / angleSeed * 0.1F + (PI.toFloat() / 2F),
         )
     }
 }
 
-fun Int.randomTest() = Random.nextInt(this)
+fun Int.random() = Random.nextInt(this)
+fun Float.random() = Random.nextFloat() * this
 fun ClosedFloatingPointRange<Float>.random() =
     start + Random.nextFloat() * (endInclusive - start)
 
