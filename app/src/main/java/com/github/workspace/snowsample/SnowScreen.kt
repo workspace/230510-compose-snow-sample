@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.isActive
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.random.Random
 
 data class SnowState(
@@ -44,25 +46,39 @@ class Snow(
     }
 
     fun update() {
+        val increment = incrementRange.random()
+        val angle = angleSeedRange.random()
+        val xAngle = increment * cos(angle)
+        val yAngle = increment * sin(angle)
         position = if (position.y > screenSize.height) {
             position.copy(y = 0F)
         } else {
-            position.copy(y = position.y + 30F)
+            position.copy(x = position.x + xAngle, y = position.y + yAngle)
         }
     }
 }
+
+private const val angleSeed = 25F
+private val angleSeedRange = -angleSeed..angleSeed
+private val incrementRange = 0.4F..0.8F
+
 
 fun createSnowList(canvas: IntSize): List<Snow> {
     return List(10) {
         Snow(
             size = 20F,
-            position = Offset(x = canvas.width.randomTest().toFloat(), y = 20F),
+            position = Offset(
+                x = canvas.width.randomTest().toFloat(),
+                y = canvas.height.randomTest().toFloat()
+            ),
             canvas
         )
     }
 }
 
 fun Int.randomTest() = Random.nextInt(this)
+fun ClosedFloatingPointRange<Float>.random() =
+    start + Random.nextFloat() * (endInclusive - start)
 
 @Composable
 fun SnowScreen() {
