@@ -29,7 +29,8 @@ data class SnowState(
 
 class Snow(
     val size: Float,
-    position: Offset
+    position: Offset,
+    val screenSize: IntSize
 ) {
     val paint: Paint = Paint().apply {
         isAntiAlias = true
@@ -43,7 +44,11 @@ class Snow(
     }
 
     fun update() {
-        position = position.copy(y = position.y + 1)
+        position = if (position.y > screenSize.height) {
+            position.copy(y = 0F)
+        } else {
+            position.copy(y = position.y + 30F)
+        }
     }
 }
 
@@ -51,7 +56,8 @@ fun createSnowList(canvas: IntSize): List<Snow> {
     return List(10) {
         Snow(
             size = 20F,
-            position = Offset(x = canvas.width.randomTest().toFloat(), y = 20F)
+            position = Offset(x = canvas.width.randomTest().toFloat(), y = 20F),
+            canvas
         )
     }
 }
@@ -63,11 +69,14 @@ fun SnowScreen() {
     val screenWidth = with(LocalDensity.current) {
         Dp(LocalConfiguration.current.screenWidthDp.toFloat()).roundToPx()
     }
+    val screenHeight = with(LocalDensity.current) {
+        Dp(LocalConfiguration.current.screenHeightDp.toFloat()).roundToPx()
+    }
     var snowState by remember {
         mutableStateOf(
             SnowState(
                 createSnowList(
-                    IntSize(screenWidth, 0)
+                    IntSize(screenWidth, screenHeight)
                 )
             )
         )
