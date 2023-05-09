@@ -10,6 +10,6 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun SnowScreen() {
     Canvas(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-
+        drawCircle(color = Color.White, radius = 20F)
     }
 }
