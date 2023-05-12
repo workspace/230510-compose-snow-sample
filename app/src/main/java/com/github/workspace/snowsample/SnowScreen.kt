@@ -36,6 +36,7 @@ class Snow(
     position: Offset,
     angle: Float,
 ) {
+
     val paint: Paint = Paint().apply {
         isAntiAlias = true
         color = Color.White
@@ -48,20 +49,28 @@ class Snow(
         canvas.drawCircle(position, size, paint)
     }
 
+    var isReachHeight: Boolean = false
     fun update() {
         val increment = incrementRange
         val xAngle = increment * cos(angle)
         val yAngle = increment * sin(angle)
 
-        angle += angleSeedRange.random() / 1000F
-
-        position = position.copy(x = position.x + xAngle, y = position.y - yAngle)
+        if (position.y <= maxHeight && isReachHeight) {
+            angle = PI.toFloat() / 2
+            position = position.copy(x = position.x + xAngle, y = position.y + yAngle)
+        } else if (position.y <= maxHeight && !isReachHeight) {
+            isReachHeight = true
+        } else {
+            position = position.copy(x = position.x + xAngle, y = position.y + yAngle)
+        }
     }
 }
 
 private const val angleSeed = 25F
 private val angleSeedRange = -angleSeed..angleSeed
-private val incrementRange = 2.0f
+private val incrementRange = 10.0f
+
+private val maxHeight = 500.0f
 
 fun createSnowList(canvas: IntSize): List<Snow> {
     return List(100) {
@@ -72,7 +81,7 @@ fun createSnowList(canvas: IntSize): List<Snow> {
                 x = canvas.width.toFloat() / 2,
                 y = canvas.height.toFloat(),
             ),
-            angle = angleSeed.random() / angleSeed * 0.1F + (PI.toFloat() / 2F),
+            angle = angleSeedRange.random() / angleSeed / 0.1f + (PI.toFloat()),
         )
     }
 }
