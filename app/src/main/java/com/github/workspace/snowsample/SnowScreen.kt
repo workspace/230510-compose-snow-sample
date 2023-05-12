@@ -27,14 +27,14 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 data class SnowState(
-    val snows: List<Snow>
+    val snows: List<Snow>,
 )
 
 class Snow(
     val size: Float,
     val screenSize: IntSize,
     position: Offset,
-    angle: Float
+    angle: Float,
 ) {
     val paint: Paint = Paint().apply {
         isAntiAlias = true
@@ -49,31 +49,28 @@ class Snow(
     }
 
     fun update() {
-        val increment = incrementRange.random()
+        val increment = incrementRange
         val xAngle = increment * cos(angle)
         val yAngle = increment * sin(angle)
+
         angle += angleSeedRange.random() / 1000F
-        position = if (position.y > screenSize.height) {
-            position.copy(y = 0F)
-        } else {
-            position.copy(x = position.x + xAngle, y = position.y + yAngle)
-        }
+
+        position = position.copy(x = position.x + xAngle, y = position.y - yAngle)
     }
 }
 
 private const val angleSeed = 25F
 private val angleSeedRange = -angleSeed..angleSeed
-private val incrementRange = 0.4F..0.8F
-
+private val incrementRange = 2.0f
 
 fun createSnowList(canvas: IntSize): List<Snow> {
-    return List(300) {
+    return List(100) {
         Snow(
             size = 20F,
             canvas,
             position = Offset(
-                x = canvas.width.random().toFloat(),
-                y = canvas.height.random().toFloat()
+                x = canvas.width.toFloat() / 2,
+                y = canvas.height.toFloat(),
             ),
             angle = angleSeed.random() / angleSeed * 0.1F + (PI.toFloat() / 2F),
         )
@@ -97,14 +94,14 @@ fun SnowScreen() {
         mutableStateOf(
             SnowState(
                 createSnowList(
-                    IntSize(screenWidth, screenHeight)
-                )
-            )
+                    IntSize(screenWidth, screenHeight),
+                ),
+            ),
         )
     }
 
     LaunchedEffect(Unit) {
-        while(isActive) {
+        while (isActive) {
             awaitFrame()
             for (snow in snowState.snows) {
                 snow.update()
@@ -115,7 +112,7 @@ fun SnowScreen() {
     Canvas(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(Color.Black),
     ) {
         val canvas = drawContext.canvas
         for (snow in snowState.snows) {
