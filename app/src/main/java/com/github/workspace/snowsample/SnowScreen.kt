@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.IntSize
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.isActive
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
@@ -36,26 +38,39 @@ class Snow(
     position: Offset,
     angle: Float,
 ) {
+    var rotation = 0f
+    private var rotationWidth = size
+    val rotationSpeed3D: Float = 1f
+    val rotationSpeed2D: Float = 1f
+    var scaleX = 0f
 
     val paint: Paint = Paint().apply {
         isAntiAlias = true
         color = Color.White
         style = PaintingStyle.Fill
     }
-    private var position by mutableStateOf(position)
+    var position by mutableStateOf(position)
     private var angle by mutableStateOf(angle)
-
+    private var increment = incrementRange
     fun draw(canvas: Canvas) {
         canvas.drawCircle(position, size, paint)
     }
 
     var isReachHeight: Boolean = false
     fun update() {
-        val increment = incrementRange
         val xAngle = increment * cos(angle)
         val yAngle = increment * sin(angle)
 
+        rotationWidth -= abs(rotationSpeed3D) * 30
+
+        if (rotationWidth < 0) rotationWidth = size
+
+
+
+        scaleX = abs(rotationWidth / size - 0.5f) * 2
+
         if (position.y <= maxHeight && isReachHeight) {
+            increment = incrementRange / 2
             angle = PI.toFloat() / 2
             position = position.copy(x = position.x + xAngle, y = position.y + yAngle)
         } else if (position.y <= maxHeight && !isReachHeight) {
@@ -124,6 +139,30 @@ fun SnowScreen() {
             .background(Color.Black),
     ) {
         val canvas = drawContext.canvas
+
+        snowState.snows.forEach {
+            withTransform(
+                transformBlock = {
+                    rotate(
+                        degrees = it.rotation,
+                        pivot = Offset(
+                            x = it.position.x + it.size / 2,
+                            y = it.position.y + it.size / 2,
+                        ),
+                    )
+                    scale(
+                        scaleX = it.scaleX,
+                        scaleY = 1f,
+                        pivot = Offset(
+                            x = it.position.x + it.size / 2,
+                            y = it.position.y,
+                        ),
+                    )
+                },
+            ) {
+                it.draw(canvas)
+            }
+        }
         for (snow in snowState.snows) {
             snow.draw(canvas)
         }
