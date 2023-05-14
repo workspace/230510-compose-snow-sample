@@ -54,6 +54,11 @@ class Snow(
     var position by mutableStateOf(position)
     private var angle by mutableStateOf(angle)
     private var increment = incrementRange
+    private val duration = 2F // 초
+    private val velocityXMax = (screenSize.width / 2) / duration
+    val velocityX = (-velocityXMax..velocityXMax).random()
+    private var velocity = (-4F) * screenSize.height / duration
+    private val acc = 8F * screenSize.height / duration / duration
     fun draw(canvas: Canvas) {
         canvas.drawCircle(position, size, paint)
     }
@@ -74,15 +79,11 @@ class Snow(
 
         scaleX = abs(rotationWidth / size - 0.5f) * 2
 
-        if (position.y <= maxHeight && isReachHeight) {
-            increment = incrementRange / 2
-            angle = PI.toFloat() / 2
-            position = position.copy(x = position.x + xAngle, y = position.y + yAngle)
-        } else if (position.y <= maxHeight && !isReachHeight) {
-            isReachHeight = true
-        } else {
-            position = position.copy(x = position.x + xAngle, y = position.y + yAngle)
-        }
+        position = position.copy(
+            x = position.x + velocityX * deltaTime,
+            y = position.y + velocity * deltaTime
+        )
+        velocity += acc * deltaTime
     }
 }
 
