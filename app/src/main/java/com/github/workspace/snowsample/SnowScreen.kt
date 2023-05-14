@@ -41,7 +41,7 @@ fun createShapeList(canvas: IntSize): List<Shape> {
         constructorList[idx](
             Offset(
                 x = canvas.width.random().toFloat(),
-                y = canvas.height.random().toFloat()
+                y = canvas.height.toFloat()
             ),
             angleSeed.random() / angleSeed * 0.1F + (PI.toFloat() / 2F)
         )
@@ -73,7 +73,7 @@ fun SnowScreen() {
     }
 
     LaunchedEffect(Unit) {
-        while(isActive) {
+        while (isActive) {
             awaitFrame()
             for (snow in shapeState.snows) {
                 snow.update(screenSize)
