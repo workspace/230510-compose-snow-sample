@@ -21,12 +21,13 @@ class Triangle(
         get() = Polygon.makeTriangle(size)
 
     override fun draw(canvas: Canvas) {
+        super.draw(canvas)
         val path = polygon.makePath(Matrix().apply {
             translate(position.x, position.y, 0f)
         })
         canvas.drawPath(
             path = path,
-            paint = paint
+            paint = paintDelegate
         )
     }
 

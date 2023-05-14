@@ -27,7 +27,6 @@ class Circle(
         color = Color.White.copy(alpha = 0.4f)
         style = PaintingStyle.Fill
     }
-    private var paintDelegate by mutableStateOf(paint)
     private var rotateAngle by mutableStateOf(0.0f)
     private val isFarSide by derivedStateOf {
         val degree = (rotateAngle * 180) % 180 / PI

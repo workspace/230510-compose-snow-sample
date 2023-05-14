@@ -16,12 +16,13 @@ class Rectangle(
 ) : ShapeImpl(position, angle) {
 
     override fun draw(canvas: Canvas) {
+        super.draw(canvas)
         canvas.drawRect(
             position.x,
             position.y,
             position.x + size.width.toFloat(),
             position.y + size.height.toFloat(),
-            paint
+            paintDelegate
         )
     }
 
