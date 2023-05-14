@@ -5,107 +5,45 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
+import com.github.workspace.snowsample.ui.shape.Circle
+import com.github.workspace.snowsample.ui.shape.Rectangle
+import com.github.workspace.snowsample.ui.shape.Shape
+import com.github.workspace.snowsample.ui.shape.Triangle
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.isActive
 import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.random.Random
 
-data class SnowState(
-    val snows: List<Snow>
+data class ShapeState(
+    val snows: List<Shape>
 )
 
-interface Shape {
-    val paint: Paint
-        get() = Paint().apply {
-            isAntiAlias = true
-            color = Color.White
-            style = PaintingStyle.Fill
-        }
+fun createShapeList(canvas: IntSize): List<Shape> {
 
-    fun draw(canvas: Canvas)
-    fun update(screenSize: IntSize)
-}
+    val constructorList = listOf(
+        Rectangle.createShapeConstructor(IntSize(40, 40)),
+        Circle.createShapeConstructor(20F),
+        Triangle.createShapeConstructor(40f)
+    )
 
-class Snow(
-    val size: Float,
-    position: Offset,
-    angle: Float
-) : Shape {
-    override val paint: Paint = Paint().apply {
-        isAntiAlias = true
-        color = Color.White
-        style = PaintingStyle.Fill
-    }
-    private val opacityPaint = Paint().apply {
-        isAntiAlias = true
-        color = Color.White.copy(alpha = 0.4f)
-        style = PaintingStyle.Fill
-    }
-    private var paintDelegate by mutableStateOf(paint)
-    private var position by mutableStateOf(position)
-    private var angle by mutableStateOf(angle)
-    private var rotateAngle by mutableStateOf(0.0f)
-    private val isFarSide by derivedStateOf {
-        val degree = (rotateAngle * 180) % 180 / PI
-        degree > 90 && degree < 135
-    }
-
-    override fun draw(canvas: Canvas) {
-        canvas.drawOval(
-            left = position.x,
-            right = position.x + size,
-            top = position.y,
-            bottom = position.y + size * cos(rotateAngle),
-            paint = paintDelegate
-        )
-    }
-
-    override fun update(screenSize: IntSize) {
-        val increment = incrementRange.random()
-        val xAngle = increment * cos(angle)
-        val yAngle = increment * sin(angle)
-        angle += angleSeedRange.random() / 1000F
-        position = if (position.y > screenSize.height) {
-            position.copy(y = 0F)
-        } else {
-            position.copy(x = position.x + xAngle, y = position.y + yAngle)
-        }
-        this.rotateAngle += 0.01f + angleSeedRange.random() / 1000F
-        paintDelegate = if (isFarSide) opacityPaint else paint
-    }
-}
-
-private const val angleSeed = 25F
-private val angleSeedRange = -angleSeed..angleSeed
-private val incrementRange = 0.4F..0.8F
-
-
-fun createSnowList(canvas: IntSize): List<Snow> {
     return List(300) {
-        Snow(
-            size = 20F,
-            position = Offset(
+        val idx = (0..constructorList.lastIndex).random()
+        constructorList[idx](
+            Offset(
                 x = canvas.width.random().toFloat(),
                 y = canvas.height.random().toFloat()
             ),
-            angle = angleSeed.random() / angleSeed * 0.1F + (PI.toFloat() / 2F),
+            angleSeed.random() / angleSeed * 0.1F + (PI.toFloat() / 2F)
         )
     }
 }
@@ -123,10 +61,11 @@ fun SnowScreen() {
     val screenHeight = with(LocalDensity.current) {
         Dp(LocalConfiguration.current.screenHeightDp.toFloat()).roundToPx()
     }
-    var snowState by remember {
+    val screenSize = IntSize(screenWidth, screenHeight)
+    val shapeState by remember {
         mutableStateOf(
-            SnowState(
-                createSnowList(
+            ShapeState(
+                createShapeList(
                     IntSize(screenWidth, screenHeight)
                 )
             )
@@ -134,10 +73,10 @@ fun SnowScreen() {
     }
 
     LaunchedEffect(Unit) {
-        while (isActive) {
+        while(isActive) {
             awaitFrame()
-            for (snow in snowState.snows) {
-                snow.update(IntSize(screenWidth, screenHeight))
+            for (snow in shapeState.snows) {
+                snow.update(screenSize)
             }
         }
     }
@@ -148,7 +87,7 @@ fun SnowScreen() {
             .background(Color.Black)
     ) {
         val canvas = drawContext.canvas
-        for (snow in snowState.snows) {
+        for (snow in shapeState.snows) {
             snow.draw(canvas)
         }
     }
