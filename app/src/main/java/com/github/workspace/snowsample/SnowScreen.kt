@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Canvas
@@ -20,7 +21,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
-import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.isActive
 import kotlin.math.PI
 import kotlin.math.abs
@@ -44,6 +44,8 @@ class Snow(
     val rotationSpeed2D: Float = 1f
     var scaleX = 0f
 
+    private var speedF = 60f
+
     val paint: Paint = Paint().apply {
         isAntiAlias = true
         color = Color.White
@@ -57,15 +59,18 @@ class Snow(
     }
 
     var isReachHeight: Boolean = false
-    fun update() {
+    fun update(deltaTime: Float) {
         val xAngle = increment * cos(angle)
         val yAngle = increment * sin(angle)
 
-        rotationWidth -= abs(rotationSpeed3D) * 30
+        rotation += rotationSpeed2D * deltaTime * speedF
+        if (rotation >= 360) rotation = 0f
 
-        if (rotationWidth < 0) rotationWidth = size
-
-
+        // 스케일을 주면서 회전한듯한 이펙트를 심어준다.
+        rotationWidth -= abs(rotationSpeed3D) * deltaTime * speedF
+        if (rotationWidth < 0) {
+            rotationWidth = size
+        }
 
         scaleX = abs(rotationWidth / size - 0.5f) * 2
 
@@ -88,7 +93,7 @@ private val incrementRange = 10.0f
 private val maxHeight = 500.0f
 
 fun createSnowList(canvas: IntSize): List<Snow> {
-    return List(100) {
+    return List(20) {
         Snow(
             size = 20F,
             canvas,
@@ -96,7 +101,7 @@ fun createSnowList(canvas: IntSize): List<Snow> {
                 x = canvas.width.toFloat() / 2,
                 y = canvas.height.toFloat(),
             ),
-            angle = angleSeedRange.random() / angleSeed / 0.1f + (PI.toFloat()),
+            angle = angleSeedRange.random() / angleSeed / 0.001f + (PI.toFloat()),
         )
     }
 }
@@ -114,6 +119,9 @@ fun SnowScreen() {
     val screenHeight = with(LocalDensity.current) {
         Dp(LocalConfiguration.current.screenHeightDp.toFloat()).roundToPx()
     }
+
+    val frameTime = remember { mutableStateOf(0L) }
+
     var snowState by remember {
         mutableStateOf(
             SnowState(
@@ -126,9 +134,13 @@ fun SnowScreen() {
 
     LaunchedEffect(Unit) {
         while (isActive) {
-            awaitFrame()
-            for (snow in snowState.snows) {
-                snow.update()
+            withFrameMillis { frameMs ->
+                val deltaMs = if (frameTime.value > 0) (frameMs - frameTime.value) else 0
+                frameTime.value = frameMs
+
+                for (snow in snowState.snows) {
+                    snow.update(deltaMs.div(1000f))
+                }
             }
         }
     }
@@ -162,9 +174,6 @@ fun SnowScreen() {
             ) {
                 it.draw(canvas)
             }
-        }
-        for (snow in snowState.snows) {
-            snow.draw(canvas)
         }
     }
 }
