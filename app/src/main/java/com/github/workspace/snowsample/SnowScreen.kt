@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
@@ -30,25 +31,43 @@ data class SnowState(
     val snows: List<Snow>
 )
 
+interface Shape {
+    val paint: Paint
+        get() = Paint().apply {
+            isAntiAlias = true
+            color = Color.White
+            style = PaintingStyle.Fill
+        }
+
+    fun draw(canvas: Canvas)
+    fun update(screenSize: IntSize)
+}
+
 class Snow(
     val size: Float,
-    val screenSize: IntSize,
     position: Offset,
     angle: Float
-) {
-    val paint: Paint = Paint().apply {
+) : Shape {
+    override val paint: Paint = Paint().apply {
         isAntiAlias = true
         color = Color.White
         style = PaintingStyle.Fill
     }
     private var position by mutableStateOf(position)
     private var angle by mutableStateOf(angle)
+    private var rotateAngle by mutableStateOf(0.0f)
 
-    fun draw(canvas: Canvas) {
-        canvas.drawCircle(position, size, paint)
+    override fun draw(canvas: Canvas) {
+        canvas.drawOval(
+            left = position.x,
+            right = position.x + size,
+            top = position.y,
+            bottom = position.y + size * cos(rotateAngle),
+            paint = paint
+        )
     }
 
-    fun update() {
+    override fun update(screenSize: IntSize) {
         val increment = incrementRange.random()
         val xAngle = increment * cos(angle)
         val yAngle = increment * sin(angle)
@@ -58,6 +77,7 @@ class Snow(
         } else {
             position.copy(x = position.x + xAngle, y = position.y + yAngle)
         }
+        this.rotateAngle += 0.01f + angleSeedRange.random() / 1000F
     }
 }
 
@@ -70,7 +90,6 @@ fun createSnowList(canvas: IntSize): List<Snow> {
     return List(300) {
         Snow(
             size = 20F,
-            canvas,
             position = Offset(
                 x = canvas.width.random().toFloat(),
                 y = canvas.height.random().toFloat()
@@ -104,10 +123,10 @@ fun SnowScreen() {
     }
 
     LaunchedEffect(Unit) {
-        while(isActive) {
+        while (isActive) {
             awaitFrame()
             for (snow in snowState.snows) {
-                snow.update()
+                snow.update(IntSize(screenWidth, screenHeight))
             }
         }
     }
