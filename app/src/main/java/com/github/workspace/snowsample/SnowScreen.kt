@@ -5,13 +5,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
@@ -53,9 +53,19 @@ class Snow(
         color = Color.White
         style = PaintingStyle.Fill
     }
+    private val opacityPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color.White.copy(alpha = 0.4f)
+        style = PaintingStyle.Fill
+    }
+    private var paintDelegate by mutableStateOf(paint)
     private var position by mutableStateOf(position)
     private var angle by mutableStateOf(angle)
     private var rotateAngle by mutableStateOf(0.0f)
+    private val isFarSide by derivedStateOf {
+        val degree = (rotateAngle * 180) % 180 / PI
+        degree > 90 && degree < 135
+    }
 
     override fun draw(canvas: Canvas) {
         canvas.drawOval(
@@ -63,7 +73,7 @@ class Snow(
             right = position.x + size,
             top = position.y,
             bottom = position.y + size * cos(rotateAngle),
-            paint = paint
+            paint = paintDelegate
         )
     }
 
@@ -78,6 +88,7 @@ class Snow(
             position.copy(x = position.x + xAngle, y = position.y + yAngle)
         }
         this.rotateAngle += 0.01f + angleSeedRange.random() / 1000F
+        paintDelegate = if (isFarSide) opacityPaint else paint
     }
 }
 
