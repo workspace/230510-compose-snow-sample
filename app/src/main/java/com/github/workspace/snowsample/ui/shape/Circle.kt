@@ -38,9 +38,9 @@ class Circle(
         opacityPaint.color = paint.color
         canvas.drawOval(
             left = position.x,
-            right = position.x + size,
+            right = position.x + size * 2,
             top = position.y,
-            bottom = position.y + size * cos(rotateAngle),
+            bottom = position.y + size * 2 * cos(rotateAngle),
             paint = if (isFarSide) opacityPaint else paint
         )
     }
