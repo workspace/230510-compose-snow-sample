@@ -3,6 +3,7 @@ package com.github.workspace.snowsample.ui.shape
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Matrix
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.unit.IntSize
 import com.github.workspace.snowsample.angleSeedRange
 import com.github.workspace.snowsample.incrementRange
@@ -20,14 +21,14 @@ class Triangle(
     private val polygon: Polygon
         get() = Polygon.makeTriangle(size)
 
-    override fun draw(canvas: Canvas) {
-        super.draw(canvas)
+    override fun draw(canvas: Canvas, paint: Paint) {
+        super.draw(canvas, paint)
         val path = polygon.makePath(Matrix().apply {
             translate(position.x, position.y, 0f)
         })
         canvas.drawPath(
             path = path,
-            paint = paintDelegate
+            paint = paint
         )
     }
 

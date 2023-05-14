@@ -33,13 +33,15 @@ class Circle(
         degree > 90 && degree < 135
     }
 
-    override fun draw(canvas: Canvas) {
+    override fun draw(canvas: Canvas, paint: Paint) {
+        super.draw(canvas, paint)
+        opacityPaint.color = paint.color
         canvas.drawOval(
             left = position.x,
             right = position.x + size,
             top = position.y,
             bottom = position.y + size * cos(rotateAngle),
-            paint = paintDelegate
+            paint = if (isFarSide) opacityPaint else paint
         )
     }
 
@@ -54,7 +56,7 @@ class Circle(
             position.copy(x = position.x + xAngle, y = position.y + yAngle)
         }
         this.rotateAngle += 0.01f + angleSeedRange.random() / 1000F
-        paintDelegate = if (isFarSide) opacityPaint else paint
+//        paintDelegate = if (isFarSide) opacityPaint else paint
     }
 
     companion object {
