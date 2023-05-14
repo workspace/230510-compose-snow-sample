@@ -49,10 +49,10 @@ class Circle(
         val xAngle = increment * cos(angle)
         val yAngle = increment * sin(angle)
         angle += angleSeedRange.random() / 1000F
-        position = if (position.y > screenSize.height) {
-            position.copy(y = 0F)
+        position = if (position.y < 0) {
+            position.copy(y = screenSize.height.toFloat())
         } else {
-            position.copy(x = position.x + xAngle, y = position.y + yAngle)
+            position.copy(x = position.x + xAngle, y = position.y - yAngle)
         }
         this.rotateAngle += 0.01f + angleSeedRange.random() / 1000F
         paintDelegate = if (isFarSide) opacityPaint else paint
